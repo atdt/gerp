@@ -1,0 +1,82 @@
+#!/usr/bin/env node
+
+// Gerrit API Client Demo
+// Usage: node demo.js --user=[user] --pass=[pass]
+
+/**
+ * Wikimedia Foundation
+ *
+ * LICENSE
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation; either version 2 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+ * GNU General Public License for more details.
+ *
+ * @author    Ori Livneh <ori@wikimedia.org>
+ */
+
+
+/*jslint node:true white:true vars:true */
+
+'use strict';
+
+var gerrit = require( './gerp' );
+
+// handle command-line arguments
+function parseArguments() {
+    var config = {};
+    var args = process.argv.slice( 1 );
+
+    args.forEach( function ( keyval ) {
+        keyval = keyval.replace( /^-+/, '' ).split( '=' );
+        var key = keyval[ 0 ];
+        var val = keyval[ 1 ];
+        config[ key ] = val;
+    } );
+
+    return config;
+}
+
+var $0 = process.argv[ 0 ];
+var config = parseArguments();
+
+function demo() {
+
+    // search gerrit for all open changelists
+    var search = gerrit.query( { status: 'open', owner: config.user } );
+    
+    search.done( function ( r ) {
+        var result = r.result;
+        var changes = result.changes;
+
+        console.log( '\n\nOpen Changelists: ' );
+        changes.forEach( function ( change ) {
+            console.log( ' [' + change.status + '] ' + change.subject );
+        } );
+    } );
+
+    console.log( '\n\nProjects:' );
+    // list first 5 arbitrary active projects
+    gerrit.ls().done( function ( r ) {
+        var projects = r.result.projects.slice( -5 );
+
+        projects.forEach( function ( project ) {
+            console.log( project.name.name );
+        } );
+    } );
+
+}
+
+
+if ( config.user === undefined || config.pass === undefined ) {
+    console.log( 'Usage: ' + $0 + ' --user=[user] --pass=[pass]' );
+    process.exit( 1 );
+}
+
+gerrit.auth( config.user, config.pass ).done( demo );
