@@ -6,10 +6,13 @@ Gerp is a library for building command-line tools for Gerrit using Node.js and G
 Example: authenticate with Gerrit and search for open changelists owned by user
 
     gerrit.auth( user, pass ).done( function () {
-        var q = gerrit.query( { status: 'open', owner: config.user } );
+
+        var q = gerrit.query( { status: 'open', owner: user } );
+
         q.done( function ( results ) {
             console.log( results );
         } );
+
     } );
   
 
